@@ -56,7 +56,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
-            COMPILER_INDEX_store_ENABLE=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
             build
 
       - name: Package Payload into NgocRongVIAM.ipa
@@ -67,11 +67,14 @@ jobs:
             exit 1
           fi
           echo "Found built app: $APP_PATH"
-          codesign --force --deep --sign - "$APP_PATH" || true
+          
+          # Tao thu muc Payload va dung ditto de giu nguyen ven toan bo symlinks va metadata
           mkdir -p "$RUNNER_TEMP/ipa_out/Payload"
-          cp -R "$APP_PATH" "$RUNNER_TEMP/ipa_out/Payload/"
+          ditto "$APP_PATH" "$RUNNER_TEMP/ipa_out/Payload/$(basename "$APP_PATH")"
+          
+          # Dong goi voi co -y de giu nguyen symbolic links cua UnityRuntime.framework
           cd "$RUNNER_TEMP/ipa_out"
-          zip -r -9 "$GITHUB_WORKSPACE/NgocRongVIAM.ipa" Payload
+          zip -qry -9 "$GITHUB_WORKSPACE/NgocRongVIAM.ipa" Payload
 
       - name: Upload NgocRongVIAM.ipa Artifact
         uses: actions/upload-artifact@v4
@@ -80,4 +83,3 @@ jobs:
           path: NgocRongVIAM.ipa
           if-no-files-found: error
           retention-days: 30
-
